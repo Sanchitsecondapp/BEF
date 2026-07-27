@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="mr" id="appHtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEF - Be Friend</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .app-container { width: 100%; max-width: 450px; height: 100vh; background: white; display: flex; flex-direction: column; box-shadow: 0 0 10px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
+        @media (min-width: 480px) { .app-container { height: 90vh; border-radius: 10px; } }
+        
+        /* Header */
+        .app-header { background-color: #075e54; color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; position: relative; }
+        .logo-title-area { display: flex; align-items: center; gap: 10px; }
+        .app-logo { width: 38px; height: 38px; background: white; color: #075e54; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .app-title { font-size: 18px; font-weight: bold; letter-spacing: 0.5px; }
+        
+        /* Plus Icon right next to BEF in the header */
+        .header-plus-container { position: relative; display: inline-block; margin-left: 15px; }
+        .header-plus-btn { background: #128c7e; color: white; border: 2px solid white; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .header-plus-dropdown { display: none; position: absolute; left: 0; top: 40px; background: white; color: #333; min-width: 160px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); border-radius: 6px; z-index: 300; overflow: hidden; }
+        .header-plus-dropdown div { padding: 10px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+        .header-plus-dropdown div:hover { background-color: #f8f9fa; }
+        .header-plus-dropdown.show { display: block; }
+
+        .header-right { display: flex; align-items: center; gap: 8px; }
+        .lang-select { background: transparent; color: white; border: 1px solid white; padding: 4px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .lang-select option { background: #075e54; color: white; }
+        
+        /* Three Dot Menu */
+        .menu-container { position: relative; display: inline-block; }
+        .three-dot-btn { background: transparent; color: white; border: none; font-size: 20px; font-weight: bold; cursor: pointer; padding: 0 5px; }
+        .dropdown-menu { display: none; position: absolute; right: 0; top: 35px; background: white; color: #333; min-width: 140px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); border-radius: 6px; z-index: 100; overflow: hidden; }
+        .dropdown-menu div { padding: 10px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
+        .dropdown-menu div:hover { background-color: #f8f9fa; }
+        .dropdown-menu.show { display: block; }
+
+        /* Navigation Tabs */
+        .nav-tabs { display: flex; background-color: #128c7e; color: white; align-items: center; }
+        .tab { flex: 1; text-align: center; padding: 10px 4px; cursor: pointer; font-size: 11px; font-weight: 600; }
+        .tab.active { border-bottom: 3px solid white; background-color: rgba(0,0,0,0.1); }
+
+        /* Content Sections */
+        .section { display: none; flex: 1; overflow-y: auto; padding: 15px; position: relative; }
+        .section.active { display: block; }
+        
+        /* Chat List & Chat Box */
+        .chat-list-item { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; cursor: pointer; gap: 12px; }
+        .chat-dp { width: 45px; height: 45px; border-radius: 50%; background-color: #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 16px; background-size: cover; background-position: center; flex-shrink: 0; }
+        .chat-info { flex: 1; }
+        .chat-info h4 { margin: 0 0 3px 0; font-size: 15px; color: #333; }
+        .chat-info p { margin: 0; font-size: 12px; color: #777; }
+        
+        .chat-box { display: flex; flex-direction: column; flex: 1; overflow-y: auto; margin-bottom: 10px; padding-right: 5px; }
+        .message { margin-bottom: 10px; padding: 10px; border-radius: 8px; background-color: #f1f0f0; max-width: 75%; position: relative; word-wrap: break-word; font-size: 14px; }
+        .message.sent { background-color: #dcf8c6; margin-left: auto; }
+        .timestamp { font-size: 9px; color: #777; display: block; margin-top: 4px; text-align: right; }
+        
+        /* Massive Emoji Picker Panel */
+        .emoji-picker { display: none; flex-direction: column; background: #fff; border: 1px solid #ccc; border-radius: 8px; position: absolute; bottom: 60px; left: 10px; right: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 50; max-height: 180px; }
+        .emoji-picker.show { display: flex; }
+        .emoji-header { background: #f0f2f5; padding: 5px 10px; font-size: 11px; font-weight: bold; color: #555; border-bottom: 1px solid #ddd; }
+        .emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; padding: 8px; overflow-y: auto; max-height: 140px; }
+        .emoji-option { font-size: 22px; cursor: pointer; text-align: center; padding: 2px; }
+        .emoji-option:hover { background: #f0f0f0; border-radius: 4px; }
+
+        /* Attachment Menu Popup (WhatsApp style features next to emoji) */
+        .attachment-container { position: relative; display: inline-block; }
+        .attachment-popup { display: none; position: absolute; left: 0; bottom: 45px; background: white; color: #333; min-width: 180px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); border-radius: 6px; z-index: 200; overflow: hidden; }
+        .attachment-popup div { padding: 10px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+        .attachment-popup div:hover { background-color: #f8f9fa; }
+        .attachment-popup.show { display: block; }
+
+        /* Input Area with Action Menu Popup just above Send */
+        .input-area { display: flex; align-items: center; padding: 8px; background-color: #f0f0f0; border-top: 1px solid #ddd; gap: 5px; position: relative; }
+        .input-area input[type="text"] { flex-grow: 1; padding: 9px 12px; border: 1px solid #ccc; border-radius: 20px; outline: none; font-size: 14px; }
+        .action-icon-btn { background: transparent; border: none; font-size: 22px; cursor: pointer; padding: 0 3px; color: #555; }
+        
+        .send-container { position: relative; display: inline-block; }
+        .send-btn { background-color: #075e54; color: white; border: none; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-weight: bold; }
+        
+        /* Popup right above the Send button */
+        .send-popup-menu { display: none; position: absolute; right: 0; bottom: 45px; background: white; color: #333; min-width: 160px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); border-radius: 6px; z-index: 200; overflow: hidden; }
+        .send-popup-menu div { padding: 10px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+        .send-popup-menu div:hover { background-color: #f8f9fa; }
+        .send-popup-menu.show { display: block; }
+
+        /* Contacts Section Actions */
+        .contact-action-bar { display: flex; gap: 8px; margin-bottom: 12px; }
+        .action-chip { flex: 1; background: #075e54; color: white; border: none; padding: 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; text-align: center; }
+        
+        .contact-item { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; gap: 12px; }
+        .contact-info h4 { margin: 0; font-size: 15px; color: #333; }
+        .contact-info p { margin: 2px 0 0 0; font-size: 11px; color: #666; }
+        .contact-actions { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+        .call-btn, .video-call-btn { background: #25d366; color: white; border: none; padding: 5px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+        .video-call-btn { background: #128c7e; }
+        .block-btn { background: #e74c3c; color: white; border: none; padding: 5px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+
+        /* Reels Section */
+        .reel-card { background: black; color: white; border-radius: 10px; margin-bottom: 15px; overflow: hidden; height: 300px; display: flex; flex-direction: column; justify-content: flex-end; padding: 15px; }
+
+        /* Modal Overlays */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 85%; max-width: 320px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .modal-content input, .modal-content textarea { width: 100%; padding: 8px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 13px; }
+        .modal-content button { width: 100%; background: #075e54; color: white; border: none; padding: 9px; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        
+        .profile-preview { width: 70px; height: 70px; border-radius: 50%; background: #ddd; margin: 0 auto 10px auto; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #555; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Header -->
+    <div class="app-header">
+        <div class="logo-title-area">
+            <div class="app-logo">BEF</div>
+            <div class="app-title" id="txtAppTitle">BEF</div>
+            
+            <!-- Plus Icon placed right next to BEF in the header -->
+            <div class="header-plus-container">
+                <button class="header-plus-btn" onclick="toggleHeaderPlusMenu()">+</button>
+                <div class="header-plus-dropdown" id="headerPlusDropdown">
+                    <div onclick="handlePlusAction('short')" id="txtCreateShort">📹 Create Short Video</div>
+                    <div onclick="handlePlusAction('post')" id="txtAddPost">📝 Add Post</div>
+                    <div onclick="handlePlusAction('story')" id="txtAddStory">📸 Add Story</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <select class="lang-select" id="langSelect" onchange="changeLanguage()">
+                <option value="mr">मराठी</option>
+                <option value="hi">हिंदी</option>
+                <option value="en">English</option>
+                <option value="gu">ગુજરાતી</option>
+                <option value="bn">বাংলা</option>
+            </select>
+            
+            <!-- Three Dot Menu -->
+            <div class="menu-container">
+                <button class="three-dot-btn" onclick="toggleMenu()">⋮</button>
+                <div class="dropdown-menu" id="dropdownMenu">
+                    <div onclick="openAccountModal()" id="txtMenuAccount">Your Account</div>
+                    <div onclick="openSettingsTab()" id="txtMenuSettings">Settings</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <div class="tab active" onclick="switchTab('chats')" id="txtTabChats">चॅट्स</div>
+        <div class="tab" onclick="switchTab('reels')" id="txtTabReels">शॉर्ट्स</div>
+        <div class="tab" onclick="switchTab('contacts')" id="txtTabContacts">कॉन्टॅक्ट्स</div>
+        <div class="tab" onclick="switchTab('settings')" id="txtTabSettings">सेटिंग्ज</div>
+    </div>
+
+    <!-- 1. Chats Section -->
+    <div id="chats" class="section active">
+        <!-- Chat List View -->
+        <div id="chatListContainer">
+            <div class="chat-list-item" onclick="openChat('संचित पाटील', 'जय महाराष्ट्र!')">
+                <div class="chat-dp" style="background-color: #075e54;">सं</div>
+                <div class="chat-info">
+                    <h4>संचित पाटील</h4>
+                    <p id="txtChatSub1">जय महाराष्ट्र!</p>
+                </div>
+            </div>
+            <div class="chat-list-item" onclick="openChat('राहुल शर्मा', 'Hello bro!')">
+                <div class="chat-dp" style="background-color: #128c7e;">रा</div>
+                <div class="chat-info">
+                    <h4>राहुल शर्मा</h4>
+                    <p id="txtChatSub2">Hello bro!</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Individual Private Chat Window -->
+        <div id="activeChatWindow" style="display:none; height:100%; flex-direction:column;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="font-size:12px; color:#075e54; cursor:pointer;" onclick="backToChatList()" id="txtBack">← बॅक</div>
+                    <div class="chat-dp" id="activeChatDp" style="width: 30px; height: 30px; font-size: 12px;">सं</div>
+                    <h4 id="activeChatTitle" style="margin:0; font-size:15px; color:#333;">संचित पाटील</h4>
+                </div>
+                
+                <!-- 3-dot menu next to Sanchit Patil with Favorite, Group, Block options -->
+                <div class="menu-container">
+                    <button class="three-dot-btn" style="color:#075e54;" onclick="toggleChatDetailMenu()">⋮</button>
+                    <div class="dropdown-menu" id="chatDetailMenu">
+                        <div onclick="chatAction('favorite')" id="txtFav">⭐ Add to Favorites</div>
+                        <div onclick="chatAction('group')" id="txtMakeGroup">👥 Create Group with Contact</div>
+                        <div onclick="chatAction('block')" id="txtBlockContact">🚫 Block Contact</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-box" id="chatBox">
+                <div class="message">
+                    <span id="txtWelcomeMsg">राम राम मंडळी! स्वागत आहे.</span>
+                    <span class="timestamp">08:00 AM</span>
+                </div>
+            </div>
+
+            <!-- Massive Emoji Picker Panel -->
+            <div class="emoji-picker" id="emojiPicker">
+                <div class="emoji-header" id="txtEmojiHeader">इमोजी निवडा / Select Emoji</div>
+                <div class="emoji-grid">
+                    <span class="emoji-option" onclick="insertEmoji('😀')">😀</span>
+                    <span class="emoji-option" onclick="insertEmoji('😃')">😃</span>
+                    <span class="emoji-option" onclick="insertEmoji('😄')">😄</span>
+                    <span class="emoji-option" onclick="insertEmoji('😁')">😁</span>
+                    <span class="emoji-option" onclick="insertEmoji('😆')">😆</span>
+                    <span class="emoji-option" onclick="insertEmoji('😅')">😅</span>
+                    <span class="emoji-option" onclick="insertEmoji('😂')">😂</span>
+                    <span class="emoji-option" onclick="insertEmoji('🤣')">🤣</span>
+                    <span class="emoji-option" onclick="insertEmoji('😊')">😊</span>
+                    <span class="emoji-option" onclick="insertEmoji('😇')">😇</span>
+                    <span class="emoji-option" onclick="insertEmoji('🙂')">🙂</span>
+                    <span class="emoji-option" onclick="insertEmoji('😉')">😉</span>
+                    <span class="emoji-option" onclick="insertEmoji('😌')">😌</span>
+                    <span class="emoji-option" onclick="insertEmoji('😍')">😍</span>
+                    <span class="emoji-option" onclick="insertEmoji('🥰')">🥰</span>
+                    <span class="emoji-option" onclick="insertEmoji('😘')">😘</span>
+                    <span class="emoji-option" onclick="insertEmoji('❤️')">❤️</span>
+                    <span class="emoji-option" onclick="insertEmoji('🧡')">🧡</span>
+                    <span class="emoji-option" onclick="insertEmoji('💛')">💛</span>
+                    <span class="emoji-option" onclick="insertEmoji('💚')">💚</span>
+                    <span class="emoji-option" onclick="insertEmoji('💙')">💙</span>
+                    <span class="emoji-option" onclick="insertEmoji('💜')">💜</span>
+                    <span class="emoji-option" onclick="insertEmoji('🖤')">🖤</span>
+                    <span class="emoji-option" onclick="insertEmoji('👍')">👍</span>
+                    <span class="emoji-option" onclick="insertEmoji('👎')">👎</span>
+                    <span class="emoji-option" onclick="insertEmoji('👏')">👏</span>
+                    <span class="emoji-option" onclick="insertEmoji('🙌')">🙌</span>
+                    <span class="emoji-option" onclick="insertEmoji('🔥')">🔥</span>
+                    <span class="emoji-option" onclick="insertEmoji('✨')">✨</span>
+                    <span class="emoji-option" onclick="insertEmoji('⭐')">⭐</span>
+                    <span class="emoji-option" onclick="insertEmoji('🎉')">🎉</span>
+                    <span class="emoji-option" onclick="insertEmoji('🚀')">🚀</span>
+                </div>
+            </div>
+
+            <!-- WhatsApp Style Attachment Popup (Next to Emoji button) -->
+            <div class="input-area">
+                <div class="attachment-container">
+                    <button class="action-icon-btn" onclick="toggleAttachmentMenu()">📎</button>
+                    <div class="attachment-popup" id="attachmentPopup">
+                        <div onclick="sendAttachment('document')" id="txtAttDoc">📄 Document</div>
+                        <div onclick="sendAttachment('media')" id="txtAttMedia">🖼️ Photos & Videos</div>
+                        <div onclick="sendAttachment('camera')" id="txtAttCamera">📷 Camera Capture</div>
+                        <div onclick="sendAttachment('audio')" id="txtAttAudio">🎵 Audio File</div>
+                        <div onclick="sendAttachment('location')" id="txtAttLoc">📍 Live Location</div>
+                    </div>
+                </div>
+
+                <button class="action-icon-btn" onclick="toggleEmojiPicker()">😊</button>
+                <input type="text" id="messageInput" placeholder="मेसेज...">
+                
+                <!-- Send button container with popup right above it -->
+                <div class="send-container">
+                    <div class="send-popup-menu" id="sendPopupMenu">
+                        <div onclick="handlePlusAction('short')" id="txtCreateShort2">📹 Create Short Video</div>
+                        <div onclick="handlePlusAction('post')" id="txtAddPost2">📝 Add Post</div>
+                        <div onclick="handlePlusAction('story')" id="txtAddStory2">📸 Add Story</div>
+                    </div>
+                    <button class="send-btn" onclick="handleSendClick()" id="txtSendBtn">पाठवा</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Reels Section -->
+    <div id="reels" class="section">
+        <h3 id="txtReelHeader" style="margin-top:0; font-size:16px; color:#075e54;">शॉर्ट व्हिडिओज</h3>
+        <div class="reel-card">
+            <div>
+                <h4 id="txtReelUser">@संचित_पाटील</h4>
+                <p id="txtReelDesc">माझा नवीन व्हिडिओ अकाऊंटवरून पोस्ट केला!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Contacts Section -->
+    <div id="contacts" class="section">
+        <div class="contact-action-bar">
+            <button class="action-chip" onclick="createNewContact()" id="txtCreateContact">➕ कॉन्टॅक्ट बनवा</button>
+            <button class="action-chip" onclick="createNewGroup()" id="txtCreateGroup">👥 ग्रुप बनवा</button>
+        </div>
+        <input type="text" id="contactSearch" class="contact-action-bar" style="border:1px solid #ccc; border-radius:20px; padding:8px 12px; width:100%; box-sizing:border-box;" placeholder="शोधा..." onkeyup="searchContacts()">
+
+        <div id="contactsListContainer">
+            <div class="contact-item" data-name="संचित पाटील">
+                <div class="chat-dp" style="width:35px; height:35px; font-size:13px; background-color: #075e54;">सं</div>
+                <div class="contact-info">
+                    <h4>संचित पाटील</h4>
+                    <p>9322643740</p>
+                </div>
+                <div class="contact-actions">
+                    <button class="call-btn" onclick="makeCall('audio', 'संचित पाटील')">📞</button>
+                    <button class="video-call-btn" onclick="makeCall('video', 'संचित पाटील')">📹</button>
+                    <button class="block-btn" onclick="blockContact(this)" id="txtBlockBtn1">ब्लॉक</button>
+                </div>
+            </div>
+            <div class="contact-item" data-name="राहुल शर्मा">
+                <div class="chat-dp" style="width:35px; height:35px; font-size:13px; background-color: #128c7e;">रा</div>
+                <div class="contact-info">
+                    <h4>राहुल शर्मा</h4>
+                    <p>9876543210</p>
+                </div>
+                <div class="contact-actions">
+                    <button class="call-btn" onclick="makeCall('audio', 'राहुल शर्मा')">📞</button>
+                    <button class="video-call-btn" onclick="makeCall('video', 'राहुल शर्मा')">📹</button>
+                    <button class="block-btn" onclick="blockContact(this)" id="txtBlockBtn2">ब्लॉक</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Settings Section -->
+    <div id="settings" class="section">
+        <h3 id="txtSettingsHeader" style="color:#075e54; margin-top:0;">ॲप सेटिंग्ज</h3>
+        <div style="background:#fff; border:1px solid #ddd; padding:10px; border-radius:6px; margin-top:10px;">
+            <h4 style="margin:0 0 5px 0; font-size:14px;" id="txtBlockedTitle">ब्लॉक केलेले कॉन्टॅक्ट्स:</h4>
+            <div id="blockedList" style="font-size:12px; color:#777;">कोणीही ब्लॉक नाही.</div>
+        </div>
+    </div>
+
+    <!-- Your Account Modal -->
+    <div class="modal" id="accountModal">
+        <div class="modal-content">
+            <h3 id="txtModalTitle" style="margin-top:0; color:#075e54; font-size:16px;">Your Account</h3>
+            <div class="profile-preview" id="profilePreview" onclick="triggerImageUpload()">📸 Photo</div>
+            <input type="file" id="imageInput" style="display:none;" accept="image/*" onchange="previewImage(event)">
+            <input type="text" id="accName" placeholder="Your Name">
+            <textarea id="accBio" placeholder="Account Description / Bio (e.g. Available)" rows="2"></textarea>
+            <button onclick="saveAccountDetails()" id="txtSaveAcc">Save Changes</button>
+            <button onclick="closeAccountModal()" style="background:#ccc; color:#333; margin-top:5px;" id="txtCancelAcc">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const translations = {
+        mr: {
+            appTitle: "BEF",
+            menuAccount: "तुमचे खाते",
+            menuSettings: "सेटिंग्ज",
+            tabChats: "चॅट्स",
+            tabReels: "शॉर्ट्स",
+            tabContacts: "कॉन्टॅक्ट्स",
+            tabSettings: "सेटिंग्ज",
+            createShort: "📹 शॉर्ट व्हिडिओ तयार करा",
+            addPost: "📝 पोस्ट जोडा",
+            addStory: "📸 स्टोरी जोडा",
+            chatSub1: "जय महाराष्ट्र!",
+            chatSub2: "हॅलो ब्रो!",
+            back: "← बॅक",
+            welcomeMsg: "राम राम मंडळी! स्वागत आहे.",
+            emojiHeader: "सर्व इमोजी निवडा",
+            inputPlaceholder: "मेसेज...",
+            sendBtn: "पाठवा",
+            reelHeader: "शॉर्ट व्हिडिओज",
+            reelUser: "@संचित_पाटील",
+            reelDesc: "माझा नवीन व्हिडिओ अकाऊंटवरून पोस्ट केला!",
+            createContact: "➕ कॉन्टॅक्ट बनवा",
+            createGroup: "👥 ग्रुप बनवा",
+            searchPh: "शोधा...",
+            blockBtn: "ब्लॉक",
+            settingsHeader: "ॲप सेटिंग्ज",
+            blockedTitle: "ब्लॉक केलेले कॉन्टॅक्ट्स:",
+            noBlocked: "कोणीही ब्लॉक नाही.",
+            modalTitle: "तुमचे खाते (Your Account)",
+            saveAcc: "बदल जतन करा",
+            cancelAcc: "रद्द करा",
+            fav: "⭐ फेव्हरेट मध्ये टाका",
+            makeGroup: "👥 कॉन्टॅक्टसह ग्रुप बनवा",
+            blockContact: "🚫 कॉन्टॅक्ट ब्लॉक करा",
+            attDoc: "📄 डॉक्युमेंट",
+            attMedia: "🖼️ फोटो आणि व्हिडिओ",
+            attCamera: "📷 कॅमेरा",
+            attAudio: "🎵 ऑडिओ फाईल",
+            attLoc: "📍 लाईव्ह लोकेशन"
+        },
+        hi: {
+            appTitle: "BEF",
+            menuAccount: "आपका खाता",
+            menuSettings: "सेटिंग्स",
+            tabChats: "चैट्स",
+            tabReels: "शॉर्ट्स",
+            tabContacts: "संपर्क",
+            tabSettings: "सेटिंग्स",
+            createShort: "📹 शॉर्ट वीडियो बनाएं",
+            addPost: "📝 पोस्ट जोड़ें",
+            addStory: "📸 स्टोरी जोड़ें",
+            chatSub1: "जय हिन्द!",
+            chatSub2: "हेलो ब्रो!",
+            back: "← पीछे",
+            welcomeMsg: "नमस्ते दोस्तों! स्वागत है।",
+            emojiHeader: "इमोजी चुनें",
+            inputPlaceholder: "संदेश लिखें...",
+            sendBtn: "भेजें",
+            reelHeader: "शॉर्ट वीडियो",
+            reelUser: "@संचित_पाटील",
+            reelDesc: "मेरा नया वीडियो अकाउंट से पोस्ट किया गया!",
+            createContact: "➕ संपर्क बनाएं",
+            createGroup: "👥 समूह बनाएं",
+            searchPh: "खोजें...",
+            blockBtn: "ब्लॉक",
+            settingsHeader: "ऐप सेटिंग्स",
+            blockedTitle: "ब्लॉक किए गए संपर्क:",
+            noBlocked: "कोई संपर्क ब्लॉक नहीं है।",
+            modalTitle: "आपका खाता (Your Account)",
+            saveAcc: "बदलाव सहेजें",
+            cancelAcc: "रद्द करें",
+            fav: "⭐ पसंदीदा में जोड़ें",
+            makeGroup: "👥 संपर्क के साथ समूह बनाएं",
+            blockContact: "🚫 संपर्क ब्लॉक करें",
+            attDoc: "📄 डॉक्यूमेंट",
+            attMedia: "🖼️ फ़ोटो और वीडियो",
+            attCamera: "📷 कैमरा",
+            attAudio: "🎵 ऑडियो फ़ाइल",
+            attLoc: "📍 लाइव लोकेशन"
+        },
+        en: {
+            appTitle: "BEF",
+            menuAccount: "Your Account",
+            menuSettings: "Settings",
+            tabChats: "Chats",
+            tabReels: "Shorts",
+            tabContacts: "Contacts",
+            tabSettings: "Settings",
+            createShort: "📹 Create Short Video",
+            addPost: "📝 Add Post",
+            addStory: "📸 Add Story",
+            chatSub1: "Jai Maharashtra!",
+            chatSub2: "Hello bro!",
+            back: "← Back",
+            welcomeMsg: "Hello everyone! Welcome.",
+            emojiHeader: "Select Emoji",
+            inputPlaceholder: "Type message...",
+            sendBtn: "Send",
+            reelHeader: "Short Videos",
+            reelUser: "@Sanchit_Patil",
+            reelDesc: "My new video posted from account!",
+            createContact: "➕ Create Contact",
+            createGroup: "👥 Create Group",
+            searchPh: "Search...",
+            blockBtn: "Block",
+            settingsHeader: "App Settings",
+            blockedTitle: "Blocked Contacts:",
+            noBlocked: "No blocked contacts.",
+            modalTitle: "Your Account",
+            saveAcc: "Save Changes",
+            cancelAcc: "Cancel",
+            fav: "⭐ Add to Favorites",
+            makeGroup: "👥 Create Group with Contact",
+            blockContact: "🚫 Block Contact",
+            attDoc: "📄 Document",
+            attMedia: "🖼️ Photos & Videos",
+            attCamera: "📷 Camera Capture",
+            attAudio: "🎵 Audio File",
+            attLoc: "📍 Live Location"
+        },
+        gu: {
+            appTitle: "BEF",
+            menuAccount: "તમારું એકાઉન્ટ",
+            menuSettings: "સેટિંગ્સ",
+            tabChats: "ચેટ્સ",
+            tabReels: "શોર્ટ્સ",
+            tabContacts: "સંપર્કો",
+            tabSettings: "સેટિંગ્સ",
+            createShort: "📹 શોર્ટ વીડિયો બનાવો",
+            addPost: "📝 પોસ્ટ ઉમેરો",
+            addStory: "📸 સ્ટોરી ઉમેરો",
+            chatSub1: "નમસ્તે!",
+            chatSub2: "હેલો ભાઈ!",
+            back: "← પાછળ",
+            welcomeMsg: "સ્વાગત છે!",
+            emojiHeader: "ઇમોજી પસંદ કરો",
+            inputPlaceholder: "સંદેશ લખો...",
+            sendBtn: "મોકલો",
+            reelHeader: "શોર્ટ વીડિયો",
+            reelUser: "@સંચિત",
+            reelDesc: "મારો નવો વીડિયો પોસ્ટ કર્યો!",
+            createContact: "➕ સંપર્ક બનાવો",
+            createGroup: "👥 ગ્રુપ બનાવો",
+            searchPh: "શોધો...",
+            blockBtn: "બ્લોક",
+            settingsHeader: "એપ સેટિંગ્સ",
+            blockedTitle: "બ્લોક કરેલ સંપર્કો:",
+            noBlocked: "કોઈ બ્લોક નથી.",
+            modalTitle: "તમારું એકાઉન્ટ",
+            saveAcc: "સેવ કરો",
+            cancelAcc: "રદ કરો",
+            fav: "⭐ મનપસંદમાં ઉમેરો",
+            makeGroup: "👥 ગ્રુપ બનાવો",
+            blockContact: "🚫 બ્લોક કરો",
+            attDoc: "📄 ડૉક્યુમેન્ટ",
+            attMedia: "🖼️ ફોટો અને વીડિયો",
+            attCamera: "📷 કેમેરા",
+            attAudio: "🎵 ઓડિયો ફાઇલ",
+            attLoc: "📍 લાઈવ લોકેશન"
+        },
+        bn: {
+            appTitle: "BEF",
+            menuAccount: "আপনার অ্যাকাউন্ট",
+            menuSettings: "সেটিংস",
+            tabChats: "চ্যাট",
+            tabReels: "শর্টস",
+            tabContacts: "যোগাযোগ",
+            tabSettings: "সেটিংস",
+            createShort: "📹 শর্ট ভিডিও তৈরি করুন",
+            addPost: "📝 পোস্ট যোগ করুন",
+            addStory: "📸 স্টোরি যোগ করুন",
+            chatSub1: "নমস্কার!",
+            chatSub2: "হ্যালো ভাই!",
+            back: "← পেছনে",
+            welcomeMsg: "স্বাগত!",
+            emojiHeader: "ইমোজি নির্বাচন করুন",
+            inputPlaceholder: "মেসেজ লিখুন...",
+            sendBtn: "পাঠান",
+            reelHeader: "শর্ট ভিডিও",
+            reelUser: "@সঞ্চিৎ",
+            reelDesc: "আমার নতুন ভিডিও পোস্ট করা হয়েছে!",
+            createContact: "➕ কন্টাক্ট তৈরি করুন",
+            createGroup: "👥 গ্রুপ তৈরি করুন",
+            searchPh: "অনুসন্ধান...",
+            blockBtn: "ব্লক",
+            settingsHeader: "অ্যাপ সেটিংস",
+            blockedTitle: "ব্লক করা কন্টাক্ট:",
+            noBlocked: "কেউ ব্লক করা নেই।",
+            modalTitle: "আপনার অ্যাকাউন্ট",
+            saveAcc: "সংরক্ষণ করুন",
+            cancelAcc: "বাতিল",
+            fav: "⭐ ফেভারিটে যোগ করুন",
+            makeGroup: "👥 গ্রুপ তৈরি করুন",
+            blockContact: "🚫 ব্লক করুন",
+            attDoc: "📄 ডকুমেন্ট",
+            attMedia: "🖼️ ফটো ও ভিডিও",
+            attCamera: "📷 ক্যামেরা",
+            attAudio: "🎵 অডিও ফাইল",
+            attLoc: "📍 লাইভ লোকেশন"
+        }
+    };
+
+    function changeLanguage() {
+        const lang = document.getElementById('langSelect').value;
+        const t = translations[lang];
+
+        document.getElementById('txtAppTitle').innerText = t.appTitle;
+        document.getElementById('txtMenuAccount').innerText = t.menuAccount;
+        document.getElementById('txtMenuSettings').innerText = t.menuSettings;
+        document.getElementById('txtTabChats').innerText = t.tabChats;
+        document.getElementById('txtTabReels').innerText = t.tabReels;
+        document.getElementById('txtTabContacts').innerText = t.tabContacts;
+        document.getElementById('txtTabSettings').innerText = t.tabSettings;
+        document.getElementById('txtCreateShort').innerText = t.createShort;
+        document.getElementById('txtAddPost').innerText = t.addPost;
+        document.getElementById('txtAddStory').innerText = t.addStory;
+        document.getElementById('txtCreateShort2').innerText = t.createShort;
+        document.getElementById('txtAddPost2').innerText = t.addPost;
+        document.getElementById('txtAddStory2').innerText = t.addStory;
+        document.getElementById('txtChatSub1').innerText = t.chatSub1;
+        document.getElementById('txtChatSub2').innerText = t.chatSub2;
+        document.getElementById('txtBack').innerText = t.back;
+        document.getElementById('txtWelcomeMsg').innerText = t.welcomeMsg;
+        document.getElementById('txtEmojiHeader').innerText = t.emojiHeader;
+        document.getElementById('messageInput').placeholder = t.inputPlaceholder;
+        document.getElementById('txtSendBtn').innerText = t.sendBtn;
+        document.getElementById('txtReelHeader').innerText = t.reelHeader;
+        document.getElementById('txtReelUser').innerText = t.reelUser;
+        document.getElementById('txtReelDesc').innerText = t.reelDesc;
+        document.getElementById('txtCreateContact').innerText = t.createContact;
+        document.getElementById('txtCreateGroup').innerText = t.createGroup;
+        document.getElementById('contactSearch').placeholder = t.searchPh;
+        document.getElementById('txtBlockBtn1').innerText = t.blockBtn;
+        document.getElementById('txtBlockBtn2').innerText = t.blockBtn;
+        document.getElementById('txtSettingsHeader').innerText = t.settingsHeader;
+        document.getElementById('txtBlockedTitle').innerText = t.blockedTitle;
+        document.getElementById('blockedList').innerText = t.noBlocked;
+        document.getElementById('txtModalTitle').innerText = t.modalTitle;
+        document.getElementById('txtSaveAcc').innerText = t.saveAcc;
+        document.getElementById('txtCancelAcc').innerText = t.cancelAcc;
+        document.getElementById('txtFav').innerText = t.fav;
+        document.getElementById('txtMakeGroup').innerText = t.makeGroup;
+        document.getElementById('txtBlockContact').innerText = t.blockContact;
+        document.getElementById('txtAttDoc').innerText = t.attDoc;
+        document.getElementById('txtAttMedia').innerText = t.attMedia;
+        document.getElementById('txtAttCamera').innerText = t.attCamera;
+        document.getElementById('txtAttAudio').innerText = t.attAudio;
+        document.getElementById('txtAttLoc').innerText = t.attLoc;
+    }
+
+    function toggleMenu() {
+        document.getElementById('dropdownMenu').classList.toggle('show');
+    }
+
+    function toggleHeaderPlusMenu() {
+        document.getElementById('headerPlusDropdown').classList.toggle('show');
+    }
+
+    function toggleChatDetailMenu() {
+        document.getElementById('chatDetailMenu').classList.toggle('show');
+    }
+
+    function chatAction(action) {
+        document.getElementById('chatDetailMenu').classList.remove('show');
+        if(action === 'favorite') {
+            alert("Added to favorites!");
+        } else if(action === 'group') {
+            alert("Group created with contact!");
+        } else if(action === 'block') {
+            alert("Contact blocked successfully!");
+            backToChatList();
+        }
+    }
+
+    function toggleAttachmentMenu() {
+        document.getElementById('attachmentPopup').classList.toggle('show');
+    }
+
+    function sendAttachment(type) {
+        document.getElementById('attachmentPopup').classList.remove('show');
+        const chatBox = document.getElementById('chatBox');
+        const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        let text = "";
+        if(type === 'document') text = "📄 [Document Sent]";
+        else if(type === 'media') text = "🖼️ [Photo/Video Sent]";
+        else if(type === 'camera') text = "📷 [Camera Snapshot Sent]";
+        else if(type === 'audio') text = "🎵 [Audio File Sent]";
+        else if(type === 'location') text = "📍 [Live Location Shared]";
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message sent';
+        messageDiv.innerHTML = `${text}<span class="timestamp">${timeString}</span>`;
+        chatBox.appendChild(messageDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function handleSendClick() {
+        document.getElementById('sendPopupMenu').classList.toggle('show');
+    }
+
+    function handlePlusAction(action) {
+        document.getElementById('headerPlusDropdown').classList.remove('show');
+        document.getElementById('sendPopupMenu').classList.remove('show');
+        if (action === 'short') {
+            alert("Create Short Video option selected!");
+        } else if (action === 'post') {
+            alert("Add Post option selected!");
+        } else if (action === 'story') {
+            alert("Add Story option selected!");
+        }
+    }
+
+    // Close dropdowns if clicked outside
+    window.onclick = function(event) {
+        if (!event.target.matches('.three-dot-btn')) {
+            const dropdowns = document.getElementsByClassName("dropdown-menu");
+            for (let i = 0; i < dropdowns.length; i++) {
+                let openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+        }
+        if (!event.target.matches('.header-plus-btn')) {
+            const plusDropdowns = document.getElementsByClassName("header-plus-dropdown");
+            for (let i = 0; i < plusDropdowns.length; i++) {
+                let openDropdown = plusDropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+        }
+        if (!event.target.matches('.send-btn')) {
+            const sendPopups = document.getElementsByClassName("send-popup-menu");
+            for (let i = 0; i < sendPopups.length; i++) {
+                let openDropdown = sendPopups[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+        }
+        if (!event.target.matches('.action-icon-btn')) {
+            const attPopups = document.getElementsByClassName("attachment-popup");
+            for (let i = 0; i < attPopups.length; i++) {
+                let openDropdown = attPopups[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+        }
+    }
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    function openSettingsTab() {
+        switchTab('settings');
+        const tabs = document.querySelectorAll('.tab');
+        if(tabs.length >= 3) tabs[3].classList.add('active');
+    }
+
+    function openChat(name, initialMsg) {
+        document.getElementById('chatListContainer').style.display = 'none';
+        const chatWindow = document.getElementById('activeChatWindow');
+        chatWindow.style.display = 'flex';
+        
+        document.getElementById('activeChatTitle').innerText = name;
+        document.getElementById('activeChatDp').innerText = name.charAt(0);
+        
+        const chatBox = document.getElementById('chatBox');
+        chatBox.innerHTML = `
+            <div class="message">
+                <span>${name} सोबतचे चॅट सुरू झाले. (${initialMsg})</span>
+                <span class="timestamp">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+        `;
+    }
+
+    function backToChatList() {
+        document.getElementById('activeChatWindow').style.display = 'none';
+        document.getElementById('chatListContainer').style.display = 'block';
+        document.getElementById('emojiPicker').classList.remove('show');
+        document.getElementById('attachmentPopup').classList.remove('show');
+    }
+
+    function toggleEmojiPicker() {
+        const picker = document.getElementById('emojiPicker');
+        picker.classList.toggle('show');
+    }
+
+    function insertEmoji(emoji) {
+        const input = document.getElementById('messageInput');
+        input.value += emoji;
+        document.getElementById('emojiPicker').classList.remove('show');
+    }
+
+    function openAccountModal() {
+        document.getElementById('accountModal').style.display = 'flex';
+    }
+
+    function closeAccountModal() {
+        document.getElementById('accountModal').style.display = 'none';
+    }
+
+    function triggerImageUpload() {
+        document.getElementById('imageInput').click();
+    }
+
+    function previewImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('profilePreview');
+                preview.style.backgroundImage = `url('${e.target.result}')`;
+                preview.innerText = '';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function saveAccountDetails() {
+        const name = document.getElementById('accName').value;
+        const bio = document.getElementById('accBio').value;
+        alert("Account details saved successfully!\nName: " + (name || "User") + "\nBio: " + (bio || "None"));
+        closeAccountModal();
+    }
+
+    function makeCall(type, name) {
+        if(type === 'audio') {
+            alert("Calling " + name + " (Audio Call)...");
+        } else {
+            alert("Connecting video call with "  + name + " (Video Call)...");
+        }
+    }
+
+    function createNewContact() {
+        const name = prompt("Enter contact name:");
+        const phone = prompt("Enter mobile number:");
+        if(name && phone) {
+            alert("Contact " + name + " created successfully!");
+        }
+    }
+
+    function createNewGroup() {
+        const gName = prompt("Enter group name:");
+        if(gName) {
+            alert("Group '" + gName + "' created successfully!");
+        }
+    }
+
+    function blockContact(btn) {
+        const item = btn.closest('.contact-item');
+        const name = item.querySelector('h4').innerText;
+        item.remove();
+        document.getElementById('blockedList').innerHTML = `<span style="color:red;">${name} blocked.</span>`;
+        alert(name + " blocked.");
+    }
+
+    function searchContacts() {
+        const query = document.getElementById('contactSearch').value.toLowerCase();
+        document.querySelectorAll('.contact-item').forEach(item => {
+            const name = item.getAttribute('data-name').toLowerCase();
+            item.style.display = name.includes(query) ? 'flex' : 'none';
+        });
+    }
+</script>
+
+</body>
+</html>
