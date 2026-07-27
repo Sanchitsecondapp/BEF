@@ -1,11 +1,24 @@
 {
-  "background_color": "#ffffff",
-  "dir": "ltr",
-  "display": "standalone",
-  "name": "bef-phi.vercel",
-  "orientation": "any",
-  "scope": "/",
-  "short_name": "bef-phi.vercel",
+  "name": "BEF - Be Friend",
+  "short_name": "BEF",
   "start_url": "/",
-  "theme_color": "#ffffff"
+  "display": "standalone",
+  "background_color": "#c61717",
+  "theme_color": "#075e54",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "id": "https://bef-phi.vercel.app/",
+  "description": "A chat with Friend"
 }
